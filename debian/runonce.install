@@ -1,0 +1,3 @@
+src/runonce.sh /usr/share/runonce/
+src/runonce-generator /usr/lib/systemd/system-generators/
+systemd/runonce@.service /usr/lib/systemd/system/

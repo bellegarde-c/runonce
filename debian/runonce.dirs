@@ -1,0 +1,9 @@
+/usr/sbin
+/usr/share/runonce
+/usr/share/runonce/scripts
+/usr/share/runonce/targets
+/var/lib/runonce
+/var/lib/runonce/queue
+/var/lib/runonce/done
+/usr/lib/systemd/system
+/usr/lib/systemd/system-generators

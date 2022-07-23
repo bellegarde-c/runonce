@@ -1,0 +1,2 @@
+/usr/share/runonce/runonce.sh /usr/sbin/runonce
+/usr/share/runonce/runonce.sh /usr/sbin/runonce-queue

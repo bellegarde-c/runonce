@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+configure() {
+	# Fix permissions
+	chmod 755 \
+		/usr/share/runonce/scripts \
+		/usr/share/runonce/targets \
+		/var/lib/runonce/queue \
+		/var/lib/runonce/done
+}
+
+case "$1" in
+	"configure")
+		configure
+		;;
+esac
