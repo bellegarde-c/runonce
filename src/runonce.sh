@@ -44,6 +44,17 @@ error() {
 	exit 1
 }
 
+can_queue() {
+	VERSION="${1}"
+
+	[ -e "${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}"  ] || return 0
+
+	current_version=$(grep -oP "\d*" ${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME})
+
+	[ ${VERSION} -gt ${current_version} ]
+	return
+}
+
 run() {
 	SCRIPT_NAME="${1}"
 
@@ -52,10 +63,11 @@ run() {
 	[ -e "${RUNONCE_QUEUED_STAMP_DIRECTORY}/${SCRIPT_NAME}" ] || error "${SCRIPT_NAME} not queued"
 
 	# Remove from queue
+	VERSION=$(grep -oP "\d*" ${RUNONCE_QUEUED_STAMP_DIRECTORY}/${SCRIPT_NAME})
+	[ -n "${VERSION}" ] || VERSION="1"
 	rm -f ${RUNONCE_QUEUED_STAMP_DIRECTORY}/${SCRIPT_NAME}
 
 	[ -e "${RUNONCE_SCRIPTS}/${SCRIPT_NAME}" ] || error "Unable to find script ${SCRIPT_NAME}"
-	[ -e "${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}" ] && return 0 # Already ran
 
 	# Execute script
 	${RUNONCE_SCRIPTS}/${SCRIPT_NAME}
@@ -63,7 +75,7 @@ run() {
 
 	# Create done stamp file only if the script executed correctly
 	# This allows re-queuing on failures
-	[ "${exit_code}" == 0 ] && touch ${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}
+	[ "${exit_code}" == 0 ] && echo "${VERSION}" > ${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}
 
 	info "Script executed, exit code is ${exit_code}"
 
@@ -72,13 +84,15 @@ run() {
 
 queue() {
 	SCRIPT_NAME="${1}"
+	VERSION="${2:-1}"
 
 	[ -e "${RUNONCE_SCRIPTS}/${SCRIPT_NAME}" ] || error "Unable to find script ${SCRIPT_NAME}"
-	[ -e "${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}" ] && return 0 # Already ran
 
 	# Queue
-	touch ${RUNONCE_QUEUED_STAMP_DIRECTORY}/${SCRIPT_NAME}
-	touch ${RUNONCE_QUEUED_STAMP}
+	if can_queue "${VERSION}"; then
+		echo "${VERSION}" > ${RUNONCE_QUEUED_STAMP_DIRECTORY}/${SCRIPT_NAME}
+		touch ${RUNONCE_QUEUED_STAMP}
+	fi
 
 	return
 }
@@ -91,9 +105,9 @@ case "$(basename ${0})" in
 		exit
 		;;
 	"runonce-queue")
-		[ -n "${1}" ] || error "Usage: ${0} <script_name>"
+		[ -n "${1}" ] || error "Usage: ${0} <script_name> [VERSION]"
 
-		queue "${1}"
+		queue "${1}" "${2}"
 		exit
 		;;
 	*)
