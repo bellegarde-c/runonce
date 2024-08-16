@@ -50,6 +50,7 @@ can_queue() {
 	[ -e "${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME}"  ] || return 0
 
 	current_version=$(grep -oP "\d*" ${RUNONCE_DONE_STAMP_DIRECTORY}/${SCRIPT_NAME})
+	[ -n "${current_version}" ] || current_version="1"
 
 	[ ${VERSION} -gt ${current_version} ]
 	return
